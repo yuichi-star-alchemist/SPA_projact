@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang = "ja">
+  <head>
+    <meta charset="utf-8">
+    <title>nonogram</title>
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+
+  <body>
+    <main>
+      <div id="content">
+        <div id="choice" class="choiceT">ここを押すと<br>マス塗りと×が<br>切り替わります！<br><span>■</span></div>
+        <div id="navi" class="naviRC"></div>
+        <table id="board"></table>
+        <div class="life">ライフがなくなると<br>ゲームオーバー！</div>
+        <div style=z-index:2; id="gamestart">
+          <p>難易度を<br>選んで下さい！<br></p>
+          <ul>
+            <li>簡単</li>
+            <li>普通</li>
+            <li>運ゲー</li>
+          </ul>
+        </div>
+        <div style=z-index:-1; id="gameend">Game Over !<br>
+          <span onclick="location.reload()">もう一度</span>
+        </div>
+      </div>
+
+    </main>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
