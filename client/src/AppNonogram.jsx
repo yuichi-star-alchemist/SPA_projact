@@ -1,16 +1,4 @@
-import React, { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-// import "./css/nonogram.css";
-
-
-
-const root = createRoot(document.getElementById("root"));
-root.render(
-  <StrictMode>
-    <Game />
-  </StrictMode>
-);
-
+export default Game
 
 function Game() {
   return (
@@ -57,7 +45,7 @@ function GameEndView() {
 
 
 function GameInit() {
-  const result = <h2>"gameinit"</h2>;
+  const result = <h2>gameinit</h2>;
   console.log(result);
   return result;
 }
