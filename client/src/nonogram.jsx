@@ -1,7 +1,7 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import Game from "./AppNonogram.jsx"
-import "./nonogram.css"
+import Game from "./js/nonogram.jsx"
+import "./css/nonogram.css"
 
 
 
