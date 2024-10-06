@@ -156,6 +156,12 @@ button {
   width: 5%;
   height: 5%;
   border: 1px solid black;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.pushed-true {
+  background: gray;
 }
 
 
@@ -170,5 +176,9 @@ button {
 
   .board-buttom {
     height: 100%;
+  }
+  
+  .cell {
+    font-size: 12px;
   }
 }

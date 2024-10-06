@@ -1,16 +1,50 @@
-import { ContainerDiv, LinkButton, OnClickButton } from "./components";
+import { ContainerDiv, LinkButton, OnClickButton } from "./components"
+import { useState } from "react"
 
 export default Game
 
+const cells = 20
+
 function Game() {
-  let content;
-  let isGame = true;
-  isGame = false;
+  let content
+  const [isGame, setIsGame] = useState(false)
+  const [fieldBoolList, setFieldBoolList] = useState(Array(cells ** 2).fill())
+  const [fieldStateList, setFieldStateList] = useState(Array(cells ** 2).fill(false))
 
   if (isGame) {
-    content = <Board />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } />
   } else {
-    content = <GameInit />
+    content = <GameInit onInitGame={ handleInitGame } />
+  }
+
+  function handleInitGame(difficultyIndex) {
+    setFieldBoolList(createFieldBoolList(difficultyIndex))
+    setIsGame(!isGame)
+  }
+  
+  function createFieldBoolList(difficultyIndex) {
+    const levelList = [
+      0.2,// ↑ easy
+      0.4,
+      0.5,
+      0.6,
+      0.8,
+    ]
+    const lebel = levelList[difficultyIndex]
+    const newFieldList = Array(cells ** 2).fill().map(() => {
+      return Math.random() > lebel
+    })
+
+    return newFieldList
+  }
+
+  function onUpdateFieldStateList(idx) {
+    if (fieldStateList[idx]) return
+
+    const newFieldStateList = [...fieldStateList]
+    newFieldStateList[idx] = true
+    
+    setFieldStateList(newFieldStateList)
   }
 
   return (
@@ -18,7 +52,7 @@ function Game() {
       <GameHeader />
       { content }
     </ContainerDiv>
-  );
+  )
 }
 
 function GameHeader() {
@@ -45,19 +79,15 @@ function GameEndView() {
   return "game is end"
 }
 
-function GameInit() {
+function GameInit({ onInitGame }) {
   const buttonTitles = ["簡単", "普通", "熟練", "鬼畜", "運ゲー"]
   const childrenList = Array(5).fill().map((val, idx) => {
     return (
-      <OnClickButton  key={ idx } onClick={ () => handleClick(idx) }>
+      <OnClickButton  key={ idx } onClick={ () => onInitGame(idx) }>
         { buttonTitles[idx] }
       </OnClickButton>
     )
   })
-
-  function handleClick(idx) {
-    console.log(idx)
-  }
 
   return (
     <ContainerDiv addClass="game-init">
@@ -79,7 +109,7 @@ function Instructions() {
   )
 }
 
-function Board() {
+function Board({ handleUpdateFieldStateList, fieldStateList, fieldBoolList }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
@@ -92,7 +122,7 @@ function Board() {
       </ContainerDiv>
       <ContainerDiv addClass="board-buttom">
         <LabelContainer className="column" />
-        <CellContainer className="cell-container" />
+        <CellContainer className="cell-container" handleUpdateFieldStateList={ handleUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } />
       </ContainerDiv>
     </ContainerDiv>
   )
@@ -119,14 +149,14 @@ function MarkView() {
 }
 
 function TimeView() {
-  const time = Date.now().toString() + " sec";
-  return time;
+  const time = Date.now().toString() + " sec"
+  return time
 }
 
 function LabelContainer({ className }) {
-  const labelList = Array(20).fill().map((val, idx) => {
+  const labelList = Array(cells).fill().map((val, idx) => {
     return <Label key={ idx } />
-  });
+  })
 
   return (
     <ContainerDiv addClass={ className }>
@@ -151,10 +181,23 @@ function Label() {
   )
 }
 
-function CellContainer({ className }) {
-  const cellList = Array(20 ** 2).fill().map((val, idx) => {
-    return <Cell key={ idx } onClick={ () => cellClick(idx) }/>
-  });
+function CellContainer({ className, handleUpdateFieldStateList, fieldStateList, fieldBoolList }) {
+  const cellList = Array(cells ** 2).fill().map((val, idx) => {
+    let cellClassName = "cell"
+    let children = ""
+    if (fieldStateList && fieldStateList[idx]) {
+      if (fieldBoolList[idx]) cellClassName += " pushed-true"
+      if (!fieldBoolList[idx]) children = "✕"
+    }
+
+    return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => onCellClick(idx) }>
+      { children }
+    </Cell>
+  })
+  
+  function onCellClick(idx) {
+    handleUpdateFieldStateList(idx)
+  }
   
   return (
     <ContainerDiv addClass={ className }>
@@ -163,12 +206,11 @@ function CellContainer({ className }) {
   )
 }
 
-function Cell({ onClick }) {
+function Cell({ cellClassName, handleClickCell, children }) {
   return (
-    <button className="cell" onClick={ onClick }>x</button>
+    <button className={ cellClassName } onClick={ handleClickCell }>
+      { children }
+    </button>
   )
 }
 
-function cellClick(idx) {
-  console.log(idx)
-}
