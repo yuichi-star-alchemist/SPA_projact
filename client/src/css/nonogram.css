@@ -43,6 +43,10 @@ button {
   padding: 0 10px 0 10px;
 }
 
+.restart {
+  height: 100%;
+}
+
 .game-init, .board {
   height: var(--BODY_HEIGHT);
   max-height: 100vw;
@@ -109,6 +113,7 @@ button {
 .row {
   width: calc(var(--BODY_HEIGHT) * 0.8);
   flex-direction: row;
+  height: 100%;
 }
 
 .label {
@@ -120,11 +125,13 @@ button {
 
 .row > .label {
   flex-direction: column-reverse;
+  justify-content: end;
+  width: 5%;
 }
 
 .row > .label > div {
   width: 100%;
-  line-height: 1.1;
+  line-height: 1.1;  
 }
 
 .board-buttom {
@@ -139,6 +146,7 @@ button {
 
 .column > .label {
   flex-direction: row-reverse;
+  justify-content: end;
 }
 
 .column > .label > div {
