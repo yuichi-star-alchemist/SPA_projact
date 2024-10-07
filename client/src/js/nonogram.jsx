@@ -247,14 +247,10 @@ function CellContainer({ className, handleUpdateFieldStateList, fieldStateList, 
       if (!fieldBoolList[idx]) children = "✕"
     }
 
-    return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => onCellClick(idx) }>
+    return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => handleUpdateFieldStateList(idx) }>
       { children }
     </Cell>
   })
-  
-  function onCellClick(idx) {
-    handleUpdateFieldStateList(idx)
-  }
   
   return (
     <ContainerDiv addClass={ className }>
