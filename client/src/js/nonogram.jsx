@@ -21,9 +21,11 @@ function Game() {
   const [fieldStateList, setFieldStateList] = useState(Array(cells ** 2).fill(false))
   // row, column 連続数を保持
   const [labelsCountList, setLabelsCountList] = useState()
+  // row, column trueの開始位置を保持
+  const [labelsBoolIndex, setLabelsBoolIndex] = useState()
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } labelsCountList={ labelsCountList } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
@@ -32,6 +34,7 @@ function Game() {
     const newFieldBoolList = createFieldBoolList(difficultyIndex)
     setFieldBoolList(newFieldBoolList)
     setLabelsCountList(makeCountList(newFieldBoolList))
+    setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldBoolList))
     setIsGame(true)
   }
   
@@ -86,6 +89,38 @@ function Game() {
     return countList
   }
 
+  function makeLabelsBoolIndexList(newFieldBoolList) {
+    // 開始位置を保持する配列を初期化
+    const countList = [
+      Array(cells).fill().map(() => []),
+      Array(cells).fill().map(() => [])
+    ]
+
+    let isConcatRow = false
+    let isConcatColumn = false
+    for (let i=0; i<cells; i++) {
+      for (let j=0; j<cells; j++) {
+        const cellRow = newFieldBoolList[cells * j + i]
+        if (!isConcatRow && cellRow) {
+          countList[0][i].push(j)
+          isConcatRow = true
+        } else if (isConcatRow && !cellRow){
+          isConcatRow = false
+        }
+        
+        const cellColumn = newFieldBoolList[cells * i + j]
+        if (!isConcatColumn && cellColumn) {
+          countList[1][i].push(j)
+          isConcatColumn = true
+        } else if (isConcatColumn && !cellColumn){
+          isConcatColumn = false
+        }
+      }
+    }
+
+    return countList
+  }
+
   function onUpdateFieldStateList(idx) {
     if (fieldStateList[idx]) return
 
@@ -105,7 +140,7 @@ function Game() {
   return (
     <ContainerDiv addClass="content">
       <GameHeader />
-      {/* <button onClick={ () => console.log(labelsCountList) }></button> */}
+      {/* <button onClick={ () => console.log(labelsCountList, labelsBoolIndex) } className="debug" ></button> */}
       { content }
     </ContainerDiv>
   )
