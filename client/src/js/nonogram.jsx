@@ -4,6 +4,10 @@ import { useState } from "react"
 export default Game
 
 const cells = 20
+const TRUE = 1
+const FALSE = -1
+const CHOICED_TRUE = 2
+const CHOICED_FALSE = -2
 
 function Game() {
   let content
@@ -46,7 +50,7 @@ function Game() {
     ]
     const lebel = levelList[difficultyIndex]
     const newFieldList = Array(cells ** 2).fill().map(() => {
-      return Math.random() > lebel ? 1 : -1
+      return Math.random() > lebel ? TRUE : FALSE
     })
 
     return newFieldList
@@ -120,11 +124,11 @@ function Game() {
   }
 
   function onUpdateFieldStateList(idx) {
-    if (fieldStateList[idx] == 2 || fieldStateList[idx] == -2) return
+    if (fieldStateList[idx] == CHOICED_TRUE || fieldStateList[idx] == CHOICED_FALSE) return
 
     const newFieldStateList = [...fieldStateList]
-    if (fieldStateList[idx] == 1) newFieldStateList[idx] = 2
-    if (fieldStateList[idx] == -1) newFieldStateList[idx] = -2
+    if (fieldStateList[idx] == TRUE) newFieldStateList[idx] = CHOICED_TRUE
+    if (fieldStateList[idx] == FALSE) newFieldStateList[idx] = CHOICED_FALSE
     
     setFieldStateList(newFieldStateList)
   }
@@ -276,8 +280,8 @@ function CellContainer({ className, handleUpdateFieldStateList, fieldStateList }
   const cellList = Array(cells ** 2).fill().map((val, idx) => {
     let cellClassName = "cell"
     let children = ""
-    if (fieldStateList[idx] == 2) cellClassName += " pushed-true"
-    if (fieldStateList[idx] == -2) children = "✕"
+    if (fieldStateList[idx] == CHOICED_TRUE) cellClassName += " pushed-true"
+    if (fieldStateList[idx] == CHOICED_FALSE) children = "✕"
 
     return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => handleUpdateFieldStateList(idx) }>
       { children }
