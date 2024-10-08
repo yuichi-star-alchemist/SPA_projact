@@ -15,56 +15,54 @@ function Game() {
   380......cells**2-1
   -----------------*/
   const [isGame, setIsGame] = useState(false)
-  // 当たり判定を保持
-  const [fieldBoolList, setFieldBoolList] = useState(Array(cells ** 2).fill())
-  // クリックフラグを保持
-  const [fieldStateList, setFieldStateList] = useState(Array(cells ** 2).fill(false))
+  // -2, -1, 1, 2の値で状態とあたり判定を管理
+  const [fieldStateList, setFieldStateList] = useState(Array(cells ** 2))
   // row, column 連続数を保持
   const [labelsCountList, setLabelsCountList] = useState()
   // row, column trueの開始位置を保持
   const [labelsBoolIndex, setLabelsBoolIndex] = useState()
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
 
   function handleInitGame(difficultyIndex) {
-    const newFieldBoolList = createFieldBoolList(difficultyIndex)
-    setFieldBoolList(newFieldBoolList)
-    setLabelsCountList(makeCountList(newFieldBoolList))
-    setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldBoolList))
+    const newFieldStateList = createFieldStateList(difficultyIndex)
+    setFieldStateList(newFieldStateList)
+    setLabelsCountList(makeCountList(newFieldStateList))
+    setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldStateList))
     setIsGame(true)
   }
   
-  function createFieldBoolList(difficultyIndex) {
+  function createFieldStateList(difficultyIndex) {
     const levelList = [
       0.2,// ↑ easy
       0.4,
-      0.5,
       0.6,
+      0.7,
       0.8,
     ]
     const lebel = levelList[difficultyIndex]
     const newFieldList = Array(cells ** 2).fill().map(() => {
-      return Math.random() > lebel
+      return Math.random() > lebel ? 1 : -1
     })
 
     return newFieldList
   }
 
-  function getCountInColumn(newFieldBoolList, i, j) {
+  function getCountInColumn(newFieldStateList, isRow, j) {
     const result = []
     let count = 0
     let idx
     for (let k=0; k<cells; k++) {
-      if (i == 0) {// rowは左からj行目
+      if (isRow == 0) {// rowは左からj行目
         idx = cells * k + j
       } else {// columnは上からj列目
         idx = cells * j + k
       }
-      if (newFieldBoolList[idx]) {
+      if (newFieldStateList[idx] > 0) {
         count++
       } else {
         if (count) {
@@ -78,18 +76,18 @@ function Game() {
     return result
   }
 
-  function makeCountList(newFieldBoolList) {
+  function makeCountList(newFieldStateList) {
     const countList = [[], []]
     for (let i=0; i<2; i++) {
       for (let j=0; j<cells; j++) {
-        countList[i].push(getCountInColumn(newFieldBoolList, i, j))
+        countList[i].push(getCountInColumn(newFieldStateList, i, j))
       }
     }
 
     return countList
   }
 
-  function makeLabelsBoolIndexList(newFieldBoolList) {
+  function makeLabelsBoolIndexList(newFieldStateList) {
     // 開始位置を保持する配列を初期化
     const countList = [
       Array(cells).fill().map(() => []),
@@ -100,19 +98,19 @@ function Game() {
     let isConcatColumn = false
     for (let i=0; i<cells; i++) {
       for (let j=0; j<cells; j++) {
-        const cellRow = newFieldBoolList[cells * j + i]
-        if (!isConcatRow && cellRow) {
+        const cellRow = newFieldStateList[cells * j + i]
+        if (!isConcatRow && cellRow > 0) {
           countList[0][i].push(j)
           isConcatRow = true
-        } else if (isConcatRow && !cellRow){
+        } else if (isConcatRow && cellRow < 0){
           isConcatRow = false
         }
         
-        const cellColumn = newFieldBoolList[cells * i + j]
-        if (!isConcatColumn && cellColumn) {
+        const cellColumn = newFieldStateList[cells * i + j]
+        if (!isConcatColumn && cellColumn > 0) {
           countList[1][i].push(j)
           isConcatColumn = true
-        } else if (isConcatColumn && !cellColumn){
+        } else if (isConcatColumn && cellColumn < 0){
           isConcatColumn = false
         }
       }
@@ -122,10 +120,11 @@ function Game() {
   }
 
   function onUpdateFieldStateList(idx) {
-    if (fieldStateList[idx]) return
+    if (fieldStateList[idx] == 2 || fieldStateList[idx] == -2) return
 
     const newFieldStateList = [...fieldStateList]
-    newFieldStateList[idx] = true
+    if (fieldStateList[idx] == 1) newFieldStateList[idx] = 2
+    if (fieldStateList[idx] == -1) newFieldStateList[idx] = -2
     
     setFieldStateList(newFieldStateList)
   }
@@ -200,7 +199,7 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, fieldBoolList, labelsCountList }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
@@ -213,7 +212,7 @@ function Board({ handleUpdateFieldStateList, fieldStateList, fieldBoolList, labe
       </ContainerDiv>
       <ContainerDiv addClass="board-buttom">
         <LabelContainer className="column" labelsCountList={ labelsCountList } />
-        <CellContainer className="cell-container" handleUpdateFieldStateList={ handleUpdateFieldStateList } fieldStateList={ fieldStateList } fieldBoolList={ fieldBoolList } />
+        <CellContainer className="cell-container" handleUpdateFieldStateList={ handleUpdateFieldStateList } fieldStateList={ fieldStateList } />
       </ContainerDiv>
     </ContainerDiv>
   )
@@ -273,14 +272,12 @@ function Label({ labelCountList }) {
   )
 }
 
-function CellContainer({ className, handleUpdateFieldStateList, fieldStateList, fieldBoolList }) {
+function CellContainer({ className, handleUpdateFieldStateList, fieldStateList }) {
   const cellList = Array(cells ** 2).fill().map((val, idx) => {
     let cellClassName = "cell"
     let children = ""
-    if (fieldStateList && fieldStateList[idx]) {
-      if (fieldBoolList[idx]) cellClassName += " pushed-true"
-      if (!fieldBoolList[idx]) children = "✕"
-    }
+    if (fieldStateList[idx] == 2) cellClassName += " pushed-true"
+    if (fieldStateList[idx] == -2) children = "✕"
 
     return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => handleUpdateFieldStateList(idx) }>
       { children }
