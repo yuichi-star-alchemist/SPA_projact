@@ -8,6 +8,9 @@ const TRUE = 1
 const FALSE = -1
 const CHOICED_TRUE = 2
 const CHOICED_FALSE = -2
+const NUL_STATE = 0
+const ROW = 0
+const COLUMN = 1
 
 function Game() {
   let content
@@ -61,12 +64,12 @@ function Game() {
     let count = 0
     let idx
     for (let k=0; k<cells; k++) {
-      if (isRow == 0) {// rowは左からj行目
+      if (isRow == ROW) {// rowは左からj行目
         idx = cells * k + j
       } else {// columnは上からj列目
         idx = cells * j + k
       }
-      if (newFieldStateList[idx] > 0) {
+      if (newFieldStateList[idx] > NUL_STATE) {
         count++
       } else {
         if (count) {
@@ -103,18 +106,18 @@ function Game() {
     for (let i=0; i<cells; i++) {
       for (let j=0; j<cells; j++) {
         const cellRow = newFieldStateList[cells * j + i]
-        if (!isConcatRow && cellRow > 0) {
-          countList[0][i].push(j)
+        if (!isConcatRow && cellRow > NUL_STATE) {
+          countList[ROW][i].push(j)
           isConcatRow = true
-        } else if (isConcatRow && cellRow < 0){
+        } else if (isConcatRow && cellRow < NUL_STATE){
           isConcatRow = false
         }
         
         const cellColumn = newFieldStateList[cells * i + j]
-        if (!isConcatColumn && cellColumn > 0) {
-          countList[1][i].push(j)
+        if (!isConcatColumn && cellColumn > NUL_STATE) {
+          countList[COLUMN][i].push(j)
           isConcatColumn = true
-        } else if (isConcatColumn && cellColumn < 0){
+        } else if (isConcatColumn && cellColumn < NUL_STATE){
           isConcatColumn = false
         }
       }
@@ -126,18 +129,42 @@ function Game() {
   function onUpdateFieldStateList(idx) {
     if (fieldStateList[idx] == CHOICED_TRUE || fieldStateList[idx] == CHOICED_FALSE) return
 
-    const newFieldStateList = [...fieldStateList]
+    let newFieldStateList = [...fieldStateList]
     if (fieldStateList[idx] == TRUE) newFieldStateList[idx] = CHOICED_TRUE
     if (fieldStateList[idx] == FALSE) newFieldStateList[idx] = CHOICED_FALSE
+
+    if (!checkIsTrueInColumn(ROW, idx, newFieldStateList)) {
+      newFieldStateList = fillEmptyField(ROW, idx, newFieldStateList)
+    }
+    if (!checkIsTrueInColumn(COLUMN, idx, newFieldStateList)) {
+      newFieldStateList = fillEmptyField(COLUMN, idx, newFieldStateList)
+    }
     
     setFieldStateList(newFieldStateList)
   }
 
-  function checkIsTrueInColumn() {
-    // 渡されたindexの1列の中にtrueがあるかどうかの判定を返す
-    return
+  function checkIsTrueInColumn(isRow, idx, newFieldStateList) {
+    idx = isRow == ROW ? idx % cells : Math.floor(idx / cells)
+    const checkArray = isRow == ROW ? [] : newFieldStateList.slice(idx * cells, (idx + 1) * cells)
+    if (isRow == ROW) {
+      for (let i=0; i<cells; i++) {
+        checkArray.push(newFieldStateList[cells * i + idx])
+      }
+    }
+
+    return checkArray.includes(TRUE)
   }
 
+  function fillEmptyField(isRow, idx, newFieldStateList) {
+    idx = isRow == ROW ? idx % cells : Math.floor(idx / cells)
+    const resultFieldStateList = [...newFieldStateList]
+    for (let i=0; i<cells; i++) {
+      const cellIdx = isRow == ROW ? cells * i + idx : cells * idx + i
+      if (newFieldStateList[cellIdx] == FALSE) resultFieldStateList[cellIdx] = CHOICED_FALSE
+    }
+
+    return resultFieldStateList
+  }
 
 
   return (
@@ -253,7 +280,7 @@ function LabelContainer({ className, labelsCountList }) {
   })
 
   function makeLabelCountList(idx) {
-    const isRow = className == "row" ? 0 : 1
+    const isRow = className == "row" ? ROW : 1
     return [...labelsCountList[isRow][idx]].reverse()
   }
 
