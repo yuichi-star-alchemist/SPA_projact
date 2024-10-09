@@ -3,7 +3,7 @@ import { useState } from "react"
 
 export default Game
 
-const cells = 20
+const CELLS = 20
 const TRUE = 1
 const FALSE = -1
 const CHOICED_TRUE = 2
@@ -12,19 +12,20 @@ const NUL_STATE = 0
 const ROW = 0
 const COLUMN = 1
 const MAX_LIFE_POINT = 5
+const COUNT_STOP_TIME = 9999
 
 function Game() {
-  let content
   /* フィールドの構造
-  0  1  2...  |cells==20
+  0  1  2...  |CELLS==20
   20 21 22
   .
   .
-  380......cells**2-1
+  380......CELLS**2-1
   -----------------*/
+  let content
   const [isGame, setIsGame] = useState(false)
   // -2, -1, 1, 2の値で状態とあたり判定を管理
-  const [fieldStateList, setFieldStateList] = useState(Array(cells ** 2))
+  const [fieldStateList, setFieldStateList] = useState(Array(CELLS ** 2))
   // row, column 連続数を保持
   const [labelsCountList, setLabelsCountList] = useState()
   // row, column trueの開始位置を保持
@@ -32,13 +33,25 @@ function Game() {
   const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
   const [gameEnd, setGameEnd] = useState(false)
   const [choice, setChoice] = useState(TRUE)
+  const [currentTime, setCurrentTime] = useState(0)
 
 // ------------------------init専用------------------------------
   function handleInitGame(difficultyIndex) {
+    startTimer()
     const newFieldStateList = createFieldStateList(difficultyIndex)
     const updatedFieldStateList = tryFillingAllColumns(newFieldStateList)
 
     updateField(updatedFieldStateList)
+  }
+
+  function startTimer() {
+    const startTime = Date.now()
+    let elapsedTime
+    const timeoutId = setInterval(() => {
+      elapsedTime = Date.now() - startTime
+      setCurrentTime(elapsedTime)
+      if (elapsedTime > COUNT_STOP_TIME * 1000) clearInterval(timeoutId)
+    }, 1000)
   }
   
   function createFieldStateList(difficultyIndex) {
@@ -50,7 +63,7 @@ function Game() {
       0.8,
     ]
     const lebel = levelList[difficultyIndex]
-    const newFieldList = Array(cells ** 2).fill().map(() => {
+    const newFieldList = Array(CELLS ** 2).fill().map(() => {
       return Math.random() > lebel ? TRUE : FALSE
     })
 
@@ -60,7 +73,7 @@ function Game() {
   function makeCountList(newFieldStateList) {
     const countList = [[], []]
     for (let i=0; i<2; i++) {
-      for (let j=0; j<cells; j++) {
+      for (let j=0; j<CELLS; j++) {
         countList[i].push(getCountInColumn(newFieldStateList, i, j))
       }
     }
@@ -71,15 +84,15 @@ function Game() {
   function makeLabelsBoolIndexList(newFieldStateList) {
     // 開始位置を保持する配列を初期化
     const countList = [
-      Array(cells).fill().map(() => []),
-      Array(cells).fill().map(() => [])
+      Array(CELLS).fill().map(() => []),
+      Array(CELLS).fill().map(() => [])
     ]
 
     let isConcatRow = false
     let isConcatColumn = false
-    for (let i=0; i<cells; i++) {
-      for (let j=0; j<cells; j++) {
-        const cellRow = newFieldStateList[cells * j + i]
+    for (let i=0; i<CELLS; i++) {
+      for (let j=0; j<CELLS; j++) {
+        const cellRow = newFieldStateList[CELLS * j + i]
         if (!isConcatRow && cellRow > NUL_STATE) {
           countList[ROW][i].push(j)
           isConcatRow = true
@@ -87,7 +100,7 @@ function Game() {
           isConcatRow = false
         }
         
-        const cellColumn = newFieldStateList[cells * i + j]
+        const cellColumn = newFieldStateList[CELLS * i + j]
         if (!isConcatColumn && cellColumn > NUL_STATE) {
           countList[COLUMN][i].push(j)
           isConcatColumn = true
@@ -102,8 +115,8 @@ function Game() {
 
   function tryFillingAllColumns(newFieldStateList) {
     let updatedFieldStateList = [...newFieldStateList]
-    for (let i=0; i<cells; i++) {
-      const fldIdx = cells * i + i
+    for (let i=0; i<CELLS; i++) {
+      const fldIdx = CELLS * i + i
       updatedFieldStateList = updateFieldStateList(fldIdx, updatedFieldStateList)
     }
 
@@ -114,11 +127,11 @@ function Game() {
     const result = []
     let count = 0
     let fldIdx
-    for (let k=0; k<cells; k++) {
+    for (let k=0; k<CELLS; k++) {
       if (isRow == ROW) {// rowは左からj行目
-        fldIdx = cells * k + colIdx
+        fldIdx = CELLS * k + colIdx
       } else {// columnは上からj列目
-        fldIdx = cells * colIdx + k
+        fldIdx = CELLS * colIdx + k
       }
       if (newFieldStateList[fldIdx] > NUL_STATE) {
         count++
@@ -128,7 +141,7 @@ function Game() {
           count = 0
         }
       }
-      if (k == cells - 1 && count) result.push(count)
+      if (k == CELLS - 1 && count) result.push(count)
     }
     
     return result
@@ -161,11 +174,11 @@ function Game() {
   }
 
   function checkIsTrueInColumn(newFieldStateList, isRow, fldIdx) {
-    let colIdx = isRow == ROW ? fldIdx % cells : Math.floor(fldIdx / cells)
-    const checkArray = isRow == ROW ? [] : newFieldStateList.slice(colIdx * cells, (colIdx + 1) * cells)
+    let colIdx = isRow == ROW ? fldIdx % CELLS : Math.floor(fldIdx / CELLS)
+    const checkArray = isRow == ROW ? [] : newFieldStateList.slice(colIdx * CELLS, (colIdx + 1) * CELLS)
     if (isRow == ROW) {
-      for (let i=0; i<cells; i++) {
-        checkArray.push(newFieldStateList[cells * i + colIdx])
+      for (let i=0; i<CELLS; i++) {
+        checkArray.push(newFieldStateList[CELLS * i + colIdx])
       }
     }
 
@@ -173,10 +186,10 @@ function Game() {
   }
 
   function fillEmptyField(newFieldStateList, isRow, fldIdx) {
-    let colIdx = isRow == ROW ? fldIdx % cells : Math.floor(fldIdx / cells)
+    let colIdx = isRow == ROW ? fldIdx % CELLS : Math.floor(fldIdx / CELLS)
     const updatedFieldStateList = [...newFieldStateList]
-    for (let i=0; i<cells; i++) {
-      const cellIdx = isRow == ROW ? cells * i + colIdx : cells * colIdx + i
+    for (let i=0; i<CELLS; i++) {
+      const cellIdx = isRow == ROW ? CELLS * i + colIdx : CELLS * colIdx + i
       if (newFieldStateList[cellIdx] == FALSE) updatedFieldStateList[cellIdx] = CHOICED_FALSE
     }
 
@@ -214,7 +227,7 @@ function Game() {
 
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } choice={ choice } handleChangeChoice={ onChangeChoice } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } choice={ choice } handleChangeChoice={ onChangeChoice } currentTime={ currentTime } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
@@ -301,14 +314,14 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint, choice, handleChangeChoice }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint, choice, handleChangeChoice, currentTime }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
         <ContainerDiv addClass="board-navi">
           <LifeView currentLifePoint={ currentLifePoint } />
           <MarkView choice={ choice } handleChangeChoice={ handleChangeChoice } />
-          <TimeView />
+          <TimeView currentTime={ currentTime } />
         </ContainerDiv>
         <LabelContainer className="row" labelsCountList={ labelsCountList } />
       </ContainerDiv>
@@ -327,7 +340,9 @@ function LifeView({ currentLifePoint }) {
   })
   return (
     <>
-      残りライフ
+      <p>
+        残りライフ
+      </p>
       <ContainerDiv addClass="life">
         { lifePointList }
       </ContainerDiv>
@@ -339,7 +354,9 @@ function MarkView({ choice, handleChangeChoice }) {
   const choicedView = choice == TRUE ? "〇" : "✕"
   return (
     <ContainerDiv addClass="choice">
-      { choicedView }を選択中
+      <p>
+        { choicedView }を選択中
+      </p>
       <OnClickButton className="change-choice" onClick={ handleChangeChoice }>
         切り替え
       </OnClickButton>
@@ -347,13 +364,19 @@ function MarkView({ choice, handleChangeChoice }) {
   )
 }
 
-function TimeView() {
-  const time = Date.now().toString() + " sec"
-  return time
+function TimeView({ currentTime }) {
+  return (
+    <ContainerDiv addClass="time-view">
+      <p>
+        { Math.floor(currentTime / 1000) } 秒経過
+      </p>
+      Bestは9999 秒
+    </ContainerDiv>
+  )
 }
 
 function LabelContainer({ className, labelsCountList }) {
-  const labelList = Array(cells).fill().map((val, idx) => {
+  const labelList = Array(CELLS).fill().map((val, idx) => {
     return <Label key={ idx } labelCountList={ makeLabelCountList(idx) } />
   })
 
@@ -382,7 +405,7 @@ function Label({ labelCountList }) {
 }
 
 function CellContainer({ className, handleUpdateFieldStateList, fieldStateList }) {
-  const cellList = Array(cells ** 2).fill().map((val, idx) => {
+  const cellList = Array(CELLS ** 2).fill().map((val, idx) => {
     let cellClassName = "cell"
     let children = ""
     if (fieldStateList[idx] == CHOICED_TRUE) cellClassName += " pushed-true"
