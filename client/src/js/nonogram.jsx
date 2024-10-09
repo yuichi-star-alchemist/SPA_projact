@@ -1,4 +1,4 @@
-import { ContainerDiv, LinkButton, OnClickButton } from "./components"
+import { ContainerDiv, LinkButton, OnClickButton, HeartMark } from "./components"
 import { useState } from "react"
 
 export default Game
@@ -11,6 +11,7 @@ const CHOICED_FALSE = -2
 const NUL_STATE = 0
 const ROW = 0
 const COLUMN = 1
+const MAX_LIFE_POINT = 5
 
 function Game() {
   let content
@@ -28,9 +29,10 @@ function Game() {
   const [labelsCountList, setLabelsCountList] = useState()
   // row, column trueの開始位置を保持
   const [labelsBoolIndex, setLabelsBoolIndex] = useState()
+  const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } maxLifePoint={ MAX_LIFE_POINT } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
@@ -255,12 +257,12 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, maxLifePoint }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
         <ContainerDiv addClass="board-navi">
-          <LifeView />
+          <LifeView maxLifePoint={ maxLifePoint } />
           <MarkView />
           <TimeView />
         </ContainerDiv>
@@ -274,12 +276,17 @@ function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList }) 
   )
 }
 
-function LifeView() {
+function LifeView({ maxLifePoint }) {
+  const lifePointList = Array(maxLifePoint).fill().map((val, idx) => {
+    return <HeartMark key={ idx } />
+  })
   return (
-    <ContainerDiv addClass="life">
-      ♥がなくなるとゲームオーバー！<br/>
-      ♥♥♥♥♥
-    </ContainerDiv>
+    <>
+      残りライフ
+      <ContainerDiv addClass="life">
+        { lifePointList }
+      </ContainerDiv>
+    </>
   )
 }
 

@@ -102,6 +102,16 @@ button {
   height: 100%;
 }
 
+.life {
+  flex-direction: row;
+}
+
+.heart-mark {
+  color: pink;
+  font-size: 24px;
+  line-height: 1;
+}
+
 .choice {
   flex-direction: row;
 }

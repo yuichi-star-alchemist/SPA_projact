@@ -3,6 +3,7 @@ export {
   ContainerDiv,
   LinkButton,
   OnClickButton,
+  HeartMark,
 }
 
 
@@ -35,4 +36,13 @@ const OnClickButton = ({ className, onClick, children }) => {
       {children}
     </button>
   );
+}
+
+
+const HeartMark = () => {
+  return (
+    <div className="heart-mark">
+      ♥
+    </div>
+  )
 }
