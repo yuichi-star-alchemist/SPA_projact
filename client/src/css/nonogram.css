@@ -109,6 +109,9 @@ button {
   background: blueviolet;
 }
 
+.board {
+  width: 100%;
+}
 
 .board-top {
   height: 20%;
@@ -141,15 +144,17 @@ button {
 }
 
 .choice {
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .change-choice {
   background: lawngreen;
+  padding: 3px 5px;
+  border-radius: 5px;
 }
 
 .row {
-  width: calc(var(--BODY_HEIGHT) * 0.8);
+  width: 80%;
   flex-direction: row;
   height: 100%;
 }
@@ -193,7 +198,7 @@ button {
 
 .cell-container {
   height: 100%;
-  aspect-ratio: 1 / 1;
+  width: 80%;
   flex-wrap: wrap;
   flex-direction: row;
 }

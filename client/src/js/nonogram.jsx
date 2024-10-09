@@ -3,16 +3,27 @@ import { useState } from "react"
 
 export default Game
 
+// 数字定数------------------------------
 const CELLS = 20
+const MAX_LIFE_POINT = 5
+const COUNT_STOP_TIME = 9999
+// セルの状態------------------------------
 const TRUE = 1
 const FALSE = -1
 const CHOICED_TRUE = 2
 const CHOICED_FALSE = -2
 const NUL_STATE = 0
+// 行と列の指定用ラベル------------------------------
 const ROW = 0
 const COLUMN = 1
-const MAX_LIFE_POINT = 5
-const COUNT_STOP_TIME = 9999
+// ゲームの状態管理------------------------------
+const PRE_GAME = -1
+const IN_GAME = 0
+const WIN = 1
+const LOSE = 2
+
+let remainingTrueCount
+let intervalId
 
 function Game() {
   /* フィールドの構造
@@ -23,7 +34,7 @@ function Game() {
   380......CELLS**2-1
   -----------------*/
   let content
-  const [isGame, setIsGame] = useState(false)
+  const [gameState, setGameState] = useState(PRE_GAME)
   // -2, -1, 1, 2の値で状態とあたり判定を管理
   const [fieldStateList, setFieldStateList] = useState(Array(CELLS ** 2))
   // row, column 連続数を保持
@@ -31,7 +42,6 @@ function Game() {
   // row, column trueの開始位置を保持
   const [labelsBoolIndex, setLabelsBoolIndex] = useState()
   const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
-  const [gameEnd, setGameEnd] = useState(false)
   const [choice, setChoice] = useState(TRUE)
   const [currentTime, setCurrentTime] = useState(0)
 
@@ -47,10 +57,10 @@ function Game() {
   function startTimer() {
     const startTime = Date.now()
     let elapsedTime
-    const timeoutId = setInterval(() => {
+    intervalId = setInterval(() => {
       elapsedTime = Date.now() - startTime
       setCurrentTime(elapsedTime)
-      if (elapsedTime > COUNT_STOP_TIME * 1000) clearInterval(timeoutId)
+      if (elapsedTime > COUNT_STOP_TIME * 1000) clearInterval(intervalId)
     }, 1000)
   }
   
@@ -122,6 +132,17 @@ function Game() {
 
     return updatedFieldStateList
   }
+
+  function countTrue(newLabelsCountList) {
+    let count = 0
+    newLabelsCountList[0].map(row => {
+      for (let i=0; i<row.length; i++) {
+        count += row[i]
+      }
+    })
+
+    return count
+  }
 // -------------------init専用ここまで-------------------------------
   function getCountInColumn(newFieldStateList, isRow, colIdx) {
     const result = []
@@ -148,9 +169,10 @@ function Game() {
   }
 
   function onUpdateFieldStateList(fldIdx) {
-    if (gameEnd) return
-    const isLifeDamaged = isGame && isCellMisstake(fldIdx)
+    if (gameState > IN_GAME) return
+    const isLifeDamaged = isCellMisstake(fldIdx)
     const updatedFieldStateList = updateFieldStateList(fldIdx)
+    if (!isLifeDamaged && fieldStateList[fldIdx] == TRUE) remainingTrueCount--
     updateField(updatedFieldStateList, isLifeDamaged)
   }
 
@@ -158,7 +180,7 @@ function Game() {
     if (previousFieldStateList[fldIdx] == CHOICED_TRUE || previousFieldStateList[fldIdx] == CHOICED_FALSE) return previousFieldStateList
 
     let updatedFieldStateList = [...previousFieldStateList]
-    if (isGame) {
+    if (gameState == IN_GAME) {
       if (previousFieldStateList[fldIdx] == TRUE) updatedFieldStateList[fldIdx] = CHOICED_TRUE
       if (previousFieldStateList[fldIdx] == FALSE) updatedFieldStateList[fldIdx] = CHOICED_FALSE
     }
@@ -209,31 +231,40 @@ function Game() {
   }
 
   function onChangeChoice() {
-    if (gameEnd) return
+    if (gameState != IN_GAME) return
     setChoice(choice == TRUE ? FALSE : TRUE)
   }
 
 // setを行う
-  function updateField(newFieldStateList, isLifeDamaged = false) {
+  function updateField(newFieldStateList, isLifeDamaged) {
+    if (gameState == IN_GAME && remainingTrueCount <= 0) {
+      setGameState(WIN)
+      clearInterval(intervalId)
+    }
     setFieldStateList(newFieldStateList)
-    if (isLifeDamaged && currentLifePoint <= 1) setGameEnd(true)
+    if (isLifeDamaged && currentLifePoint <= 1) {
+      setGameState(LOSE)
+      clearInterval(intervalId)
+    }
     if (isLifeDamaged) setCurrentLifePoint(currentLifePoint - 1)
 
-    if (isGame) return
-    setLabelsCountList(makeCountList(newFieldStateList))
+    if (gameState >= IN_GAME) return
+    const newLabelsCountList = makeCountList(newFieldStateList)
+    remainingTrueCount = countTrue(newLabelsCountList)
+    setLabelsCountList(newLabelsCountList)
     setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldStateList))
-    setIsGame(true)
+    setGameState(IN_GAME)
   }
 
 
-  if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } choice={ choice } handleChangeChoice={ onChangeChoice } currentTime={ currentTime } />
+  if (gameState >= IN_GAME) {
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameState={ gameState } choice={ choice } handleChangeChoice={ onChangeChoice } currentTime={ currentTime } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
 
 
-  const gameEndView = gameEnd ? (
+  const gameEndView = gameState == LOSE ? (
     <ContainerDiv addClass="game-end">
       <GameEndView />
     </ContainerDiv>
