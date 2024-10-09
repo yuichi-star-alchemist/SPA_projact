@@ -31,6 +31,7 @@ function Game() {
   const [labelsBoolIndex, setLabelsBoolIndex] = useState()
   const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
   const [gameEnd, setGameEnd] = useState(false)
+  const [choice, setChoice] = useState(TRUE)
 
 // ------------------------init専用------------------------------
   function handleInitGame(difficultyIndex) {
@@ -135,7 +136,7 @@ function Game() {
 
   function onUpdateFieldStateList(fldIdx) {
     if (gameEnd) return
-    const isLifeDamaged = isGame && isCellFalse(fldIdx)
+    const isLifeDamaged = isGame && isCellMisstake(fldIdx)
     const updatedFieldStateList = updateFieldStateList(fldIdx)
     updateField(updatedFieldStateList, isLifeDamaged)
   }
@@ -181,6 +182,24 @@ function Game() {
 
     return updatedFieldStateList
   }
+
+  function isCellMisstake(fldIdx) {
+    switch (fieldStateList[fldIdx]) {
+      case CHOICED_FALSE:
+      case CHOICED_TRUE:
+        return false
+      case TRUE:
+        return choice == FALSE
+      case FALSE:
+        return choice == TRUE
+    }
+  }
+
+  function onChangeChoice() {
+    if (gameEnd) return
+    setChoice(choice == TRUE ? FALSE : TRUE)
+  }
+
 // setを行う
   function updateField(newFieldStateList, isLifeDamaged = false) {
     setFieldStateList(newFieldStateList)
@@ -193,12 +212,9 @@ function Game() {
     setIsGame(true)
   }
 
-  function isCellFalse(fldIdx) {
-    return fieldStateList[fldIdx] == FALSE
-  }
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } choice={ choice } handleChangeChoice={ onChangeChoice } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
@@ -285,13 +301,13 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint, choice, handleChangeChoice }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
         <ContainerDiv addClass="board-navi">
           <LifeView currentLifePoint={ currentLifePoint } />
-          <MarkView />
+          <MarkView choice={ choice } handleChangeChoice={ handleChangeChoice } />
           <TimeView />
         </ContainerDiv>
         <LabelContainer className="row" labelsCountList={ labelsCountList } />
@@ -319,11 +335,12 @@ function LifeView({ currentLifePoint }) {
   )
 }
 
-function MarkView() {
+function MarkView({ choice, handleChangeChoice }) {
+  const choicedView = choice == TRUE ? "〇" : "✕"
   return (
     <ContainerDiv addClass="choice">
-      現在〇を使用中
-      <OnClickButton className="change-choice">
+      { choicedView }を選択中
+      <OnClickButton className="change-choice" onClick={ handleChangeChoice }>
         切り替え
       </OnClickButton>
     </ContainerDiv>
