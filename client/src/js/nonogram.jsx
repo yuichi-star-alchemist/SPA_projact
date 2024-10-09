@@ -34,13 +34,12 @@ function Game() {
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
-
+// ------------------------init専用------------------------------
   function handleInitGame(difficultyIndex) {
     const newFieldStateList = createFieldStateList(difficultyIndex)
-    setFieldStateList(newFieldStateList)
-    setLabelsCountList(makeCountList(newFieldStateList))
-    setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldStateList))
-    setIsGame(true)
+    const updatedFieldStateList = tryFillingAllColumns(newFieldStateList)
+
+    updateField(updatedFieldStateList)
   }
   
   function createFieldStateList(difficultyIndex) {
@@ -58,31 +57,7 @@ function Game() {
 
     return newFieldList
   }
-
-  function getCountInColumn(newFieldStateList, isRow, j) {
-    const result = []
-    let count = 0
-    let idx
-    for (let k=0; k<cells; k++) {
-      if (isRow == ROW) {// rowは左からj行目
-        idx = cells * k + j
-      } else {// columnは上からj列目
-        idx = cells * j + k
-      }
-      if (newFieldStateList[idx] > NUL_STATE) {
-        count++
-      } else {
-        if (count) {
-          result.push(count)
-          count = 0
-        }
-      }
-      if (k == cells - 1 && count) result.push(count)
-    }
-    
-    return result
-  }
-
+  
   function makeCountList(newFieldStateList) {
     const countList = [[], []]
     for (let i=0; i<2; i++) {
@@ -90,10 +65,10 @@ function Game() {
         countList[i].push(getCountInColumn(newFieldStateList, i, j))
       }
     }
-
+    
     return countList
   }
-
+  
   function makeLabelsBoolIndexList(newFieldStateList) {
     // 開始位置を保持する配列を初期化
     const countList = [
@@ -122,48 +97,98 @@ function Game() {
         }
       }
     }
-
+    
     return countList
   }
 
-  function onUpdateFieldStateList(idx) {
-    if (fieldStateList[idx] == CHOICED_TRUE || fieldStateList[idx] == CHOICED_FALSE) return
-
-    let newFieldStateList = [...fieldStateList]
-    if (fieldStateList[idx] == TRUE) newFieldStateList[idx] = CHOICED_TRUE
-    if (fieldStateList[idx] == FALSE) newFieldStateList[idx] = CHOICED_FALSE
-
-    if (!checkIsTrueInColumn(ROW, idx, newFieldStateList)) {
-      newFieldStateList = fillEmptyField(ROW, idx, newFieldStateList)
+  function tryFillingAllColumns(newFieldStateList) {
+    let updatedFieldStateList = [...newFieldStateList]
+    for (let i=0; i<cells; i++) {
+      const fldIdx = cells * i + i
+      updatedFieldStateList = updateFieldStateList(fldIdx, updatedFieldStateList)
     }
-    if (!checkIsTrueInColumn(COLUMN, idx, newFieldStateList)) {
-      newFieldStateList = fillEmptyField(COLUMN, idx, newFieldStateList)
+
+    return updatedFieldStateList
+  }
+// -------------------init専用ここまで-------------------------------
+  function getCountInColumn(newFieldStateList, isRow, colIdx) {
+    const result = []
+    let count = 0
+    let fldIdx
+    for (let k=0; k<cells; k++) {
+      if (isRow == ROW) {// rowは左からj行目
+        fldIdx = cells * k + colIdx
+      } else {// columnは上からj列目
+        fldIdx = cells * colIdx + k
+      }
+      if (newFieldStateList[fldIdx] > NUL_STATE) {
+        count++
+      } else {
+        if (count) {
+          result.push(count)
+          count = 0
+        }
+      }
+      if (k == cells - 1 && count) result.push(count)
     }
     
-    setFieldStateList(newFieldStateList)
+    return result
   }
 
-  function checkIsTrueInColumn(isRow, idx, newFieldStateList) {
-    idx = isRow == ROW ? idx % cells : Math.floor(idx / cells)
-    const checkArray = isRow == ROW ? [] : newFieldStateList.slice(idx * cells, (idx + 1) * cells)
+  function onUpdateFieldStateList(fldIdx) {
+    const updatedFieldStateList = updateFieldStateList(fldIdx)
+    updateField(updatedFieldStateList)
+  }
+
+  function updateFieldStateList(fldIdx, previousFieldStateList = fieldStateList) {
+    if (previousFieldStateList[fldIdx] == CHOICED_TRUE || previousFieldStateList[fldIdx] == CHOICED_FALSE) return previousFieldStateList
+
+    let updatedFieldStateList = [...previousFieldStateList]
+    if (isGame) {
+      if (previousFieldStateList[fldIdx] == TRUE) updatedFieldStateList[fldIdx] = CHOICED_TRUE
+      if (previousFieldStateList[fldIdx] == FALSE) updatedFieldStateList[fldIdx] = CHOICED_FALSE
+    }
+
+    if (!checkIsTrueInColumn(updatedFieldStateList, ROW, fldIdx)) {
+      updatedFieldStateList = fillEmptyField(updatedFieldStateList, ROW, fldIdx)
+    }
+    if (!checkIsTrueInColumn(updatedFieldStateList, COLUMN, fldIdx)) {
+      updatedFieldStateList = fillEmptyField(updatedFieldStateList, COLUMN, fldIdx)
+    }
+
+    return updatedFieldStateList
+  }
+
+  function checkIsTrueInColumn(newFieldStateList, isRow, fldIdx) {
+    let colIdx = isRow == ROW ? fldIdx % cells : Math.floor(fldIdx / cells)
+    const checkArray = isRow == ROW ? [] : newFieldStateList.slice(colIdx * cells, (colIdx + 1) * cells)
     if (isRow == ROW) {
       for (let i=0; i<cells; i++) {
-        checkArray.push(newFieldStateList[cells * i + idx])
+        checkArray.push(newFieldStateList[cells * i + colIdx])
       }
     }
 
     return checkArray.includes(TRUE)
   }
 
-  function fillEmptyField(isRow, idx, newFieldStateList) {
-    idx = isRow == ROW ? idx % cells : Math.floor(idx / cells)
-    const resultFieldStateList = [...newFieldStateList]
+  function fillEmptyField(newFieldStateList, isRow, fldIdx) {
+    let colIdx = isRow == ROW ? fldIdx % cells : Math.floor(fldIdx / cells)
+    const updatedFieldStateList = [...newFieldStateList]
     for (let i=0; i<cells; i++) {
-      const cellIdx = isRow == ROW ? cells * i + idx : cells * idx + i
-      if (newFieldStateList[cellIdx] == FALSE) resultFieldStateList[cellIdx] = CHOICED_FALSE
+      const cellIdx = isRow == ROW ? cells * i + colIdx : cells * colIdx + i
+      if (newFieldStateList[cellIdx] == FALSE) updatedFieldStateList[cellIdx] = CHOICED_FALSE
     }
 
-    return resultFieldStateList
+    return updatedFieldStateList
+  }
+// setを行う
+  function updateField(newFieldStateList) {
+    setFieldStateList(newFieldStateList)
+
+    if (isGame) return
+    setLabelsCountList(makeCountList(newFieldStateList))
+    setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldStateList))
+    setIsGame(true)
   }
 
 
