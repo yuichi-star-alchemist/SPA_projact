@@ -47,6 +47,29 @@ button {
   height: 100%;
 }
 
+.game-end {
+  width: 70%;
+  height: 100vh;
+  background: gray;
+  margin: 0 auto 0;
+}
+
+.game-end-text {
+  font-size: 96px;
+  font-weight: bold;
+  margin: auto 0 0;
+}
+
+.game-end-info {
+  font-size: 48px;
+}
+
+.game-end-logo {
+  width: 100px;
+  height: 100px;
+  margin: auto 0 10px;
+}
+
 .game-init, .board {
   height: var(--BODY_HEIGHT);
   max-height: 100vw;

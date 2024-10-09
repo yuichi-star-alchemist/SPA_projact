@@ -30,12 +30,8 @@ function Game() {
   // row, column trueの開始位置を保持
   const [labelsBoolIndex, setLabelsBoolIndex] = useState()
   const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
+  const [gameEnd, setGameEnd] = useState(false)
 
-  if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } />
-  } else {
-    content = <GameInit onInitGame={ handleInitGame } />
-  }
 // ------------------------init専用------------------------------
   function handleInitGame(difficultyIndex) {
     const newFieldStateList = createFieldStateList(difficultyIndex)
@@ -138,6 +134,7 @@ function Game() {
   }
 
   function onUpdateFieldStateList(fldIdx) {
+    if (gameEnd) return
     const isLifeDamaged = isGame && isCellFalse(fldIdx)
     const updatedFieldStateList = updateFieldStateList(fldIdx)
     updateField(updatedFieldStateList, isLifeDamaged)
@@ -187,6 +184,7 @@ function Game() {
 // setを行う
   function updateField(newFieldStateList, isLifeDamaged = false) {
     setFieldStateList(newFieldStateList)
+    if (isLifeDamaged && currentLifePoint <= 1) setGameEnd(true)
     if (isLifeDamaged) setCurrentLifePoint(currentLifePoint - 1)
 
     if (isGame) return
@@ -199,13 +197,28 @@ function Game() {
     return fieldStateList[fldIdx] == FALSE
   }
 
+  if (isGame) {
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameEnd={ gameEnd } />
+  } else {
+    content = <GameInit onInitGame={ handleInitGame } />
+  }
+
+
+  const gameEndView = gameEnd ? (
+    <ContainerDiv addClass="game-end">
+      <GameEndView />
+    </ContainerDiv>
+  ) : null
 
   return (
-    <ContainerDiv addClass="content">
-      <GameHeader />
-      {/* <button onClick={ () => console.log(labelsCountList, labelsBoolIndex) } className="debug" ></button> */}
-      { content }
-    </ContainerDiv>
+    <>
+      { gameEndView }
+      <ContainerDiv addClass="content">
+        <GameHeader />
+        {/* <button onClick={ () => console.log(labelsCountList, labelsBoolIndex) } className="debug" ></button> */}
+        { content }
+      </ContainerDiv>
+    </>
   )
 }
 
@@ -216,7 +229,6 @@ function GameHeader() {
       <a href="/">ホームへ戻る</a><br/>
       <SettingsButton />
       <RestartButton />
-      <GameEndView />
     </ContainerDiv>
   )
 }
@@ -230,7 +242,17 @@ function RestartButton() {
 }
 
 function GameEndView() {
-  return "game is end"
+  return (
+    <>
+      <p className="game-end-text">
+        game over!
+        </p>
+      <p className="game-end-info">
+        結果の確認と再チャレンジは
+        </p>
+      <img src="/images/Arrow.png" className="game-end-logo"></img>
+    </>
+  )
 }
 
 function GameInit({ onInitGame }) {
