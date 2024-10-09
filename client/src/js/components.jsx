@@ -39,9 +39,14 @@ const OnClickButton = ({ className, onClick, children }) => {
 }
 
 
-const HeartMark = () => {
+const HeartMark = ({ addClass }) => {
+  let className = "heart-mark"
+  if (addClass) {
+    className += ` ${addClass}`
+  }
+
   return (
-    <div className="heart-mark">
+    <div className={ className }>
       ♥
     </div>
   )

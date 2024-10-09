@@ -112,6 +112,11 @@ button {
   line-height: 1;
 }
 
+.damaged {
+  color: black;
+  opacity: 0.08;
+}
+
 .choice {
   flex-direction: row;
 }

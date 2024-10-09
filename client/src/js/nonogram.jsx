@@ -32,7 +32,7 @@ function Game() {
   const [currentLifePoint, setCurrentLifePoint] = useState(MAX_LIFE_POINT)
 
   if (isGame) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } maxLifePoint={ MAX_LIFE_POINT } />
+    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } />
   } else {
     content = <GameInit onInitGame={ handleInitGame } />
   }
@@ -138,8 +138,9 @@ function Game() {
   }
 
   function onUpdateFieldStateList(fldIdx) {
+    const isLifeDamaged = isGame && isCellFalse(fldIdx)
     const updatedFieldStateList = updateFieldStateList(fldIdx)
-    updateField(updatedFieldStateList)
+    updateField(updatedFieldStateList, isLifeDamaged)
   }
 
   function updateFieldStateList(fldIdx, previousFieldStateList = fieldStateList) {
@@ -184,13 +185,18 @@ function Game() {
     return updatedFieldStateList
   }
 // setを行う
-  function updateField(newFieldStateList) {
+  function updateField(newFieldStateList, isLifeDamaged = false) {
     setFieldStateList(newFieldStateList)
+    if (isLifeDamaged) setCurrentLifePoint(currentLifePoint - 1)
 
     if (isGame) return
     setLabelsCountList(makeCountList(newFieldStateList))
     setLabelsBoolIndex(makeLabelsBoolIndexList(newFieldStateList))
     setIsGame(true)
+  }
+
+  function isCellFalse(fldIdx) {
+    return fieldStateList[fldIdx] == FALSE
   }
 
 
@@ -257,12 +263,12 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, maxLifePoint }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
         <ContainerDiv addClass="board-navi">
-          <LifeView maxLifePoint={ maxLifePoint } />
+          <LifeView currentLifePoint={ currentLifePoint } />
           <MarkView />
           <TimeView />
         </ContainerDiv>
@@ -276,9 +282,10 @@ function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, ma
   )
 }
 
-function LifeView({ maxLifePoint }) {
-  const lifePointList = Array(maxLifePoint).fill().map((val, idx) => {
-    return <HeartMark key={ idx } />
+function LifeView({ currentLifePoint }) {
+  const lifePointList = Array(MAX_LIFE_POINT).fill().map((val, idx) => {
+    const addClass = currentLifePoint <= idx ? "damaged" : ""
+    return <HeartMark key={ idx } addClass={ addClass } />
   })
   return (
     <>
