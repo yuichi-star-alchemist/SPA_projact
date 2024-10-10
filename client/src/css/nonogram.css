@@ -118,6 +118,11 @@ button {
   background: blueviolet;
 }
 
+.drag-zone {
+  width: 100%;
+  height: 100%;
+}
+
 .board {
   width: 100%;
 }

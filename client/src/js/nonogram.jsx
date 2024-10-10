@@ -1,5 +1,7 @@
-import { ContainerDiv, LinkButton, OnClickButton, HeartMark } from "./components"
 import { useState } from "react"
+
+import { ContainerDiv, LinkButton, OnClickButton, HeartMark } from "./components"
+import DragMoveAction from "./components/DragMoveAction"
 
 export default Game
 
@@ -169,7 +171,6 @@ function Game() {
   }
 
   function onUpdateFieldStateList(fldIdx) {
-    if (gameState > IN_GAME) return
     const isLifeDamaged = isCellMisstake(fldIdx)
     const updatedFieldStateList = updateFieldStateList(fldIdx)
     if (!isLifeDamaged && fieldStateList[fldIdx] == TRUE) remainingTrueCount--
@@ -257,11 +258,10 @@ function Game() {
   }
 
 
-  if (gameState >= IN_GAME) {
-    content = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameState={ gameState } choice={ choice } handleChangeChoice={ onChangeChoice } currentTime={ currentTime } />
-  } else {
-    content = <GameInit onInitGame={ handleInitGame } />
-  }
+  const boardContent = <Board handleUpdateFieldStateList={ onUpdateFieldStateList } fieldStateList={ fieldStateList } labelsCountList={ labelsCountList } labelsBoolIndex={ labelsBoolIndex } currentLifePoint={ currentLifePoint } gameState={ gameState } choice={ choice } handleChangeChoice={ onChangeChoice } currentTime={ currentTime } />
+  if (gameState > IN_GAME) content = boardContent
+  if (gameState == PRE_GAME) content = <GameInit onInitGame={ handleInitGame } />
+  if (gameState == IN_GAME) content = <DragMoveAction>{ boardContent }</DragMoveAction>
 
 
   const gameEndClass = gameState == LOSE ? "lose" : "win"
@@ -351,7 +351,7 @@ function Instructions() {
   )
 }
 
-function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint, choice, handleChangeChoice, currentTime }) {
+function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, currentLifePoint, choice, handleChangeChoice, currentTime, gameState }) {
   return (
     <ContainerDiv addClass="board">
       <ContainerDiv addClass="board-top">
@@ -364,7 +364,7 @@ function Board({ handleUpdateFieldStateList, fieldStateList, labelsCountList, cu
       </ContainerDiv>
       <ContainerDiv addClass="board-buttom">
         <LabelContainer className="column" labelsCountList={ labelsCountList } />
-        <CellContainer className="cell-container" handleUpdateFieldStateList={ handleUpdateFieldStateList } fieldStateList={ fieldStateList } />
+        <CellContainer className="cell-container" handleUpdateFieldStateList={ handleUpdateFieldStateList } fieldStateList={ fieldStateList } gameState={ gameState } />
       </ContainerDiv>
     </ContainerDiv>
   )
@@ -441,14 +441,15 @@ function Label({ labelCountList }) {
   )
 }
 
-function CellContainer({ className, handleUpdateFieldStateList, fieldStateList }) {
+function CellContainer({ className, handleUpdateFieldStateList, fieldStateList, gameState }) {
   const cellList = Array(CELLS ** 2).fill().map((val, idx) => {
     let cellClassName = "cell"
     let children = ""
     if (fieldStateList[idx] == CHOICED_TRUE) cellClassName += " pushed-true"
     if (fieldStateList[idx] == CHOICED_FALSE) children = "✕"
+    const isValidClick = gameState == IN_GAME ? handleUpdateFieldStateList : function(){}
 
-    return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => handleUpdateFieldStateList(idx) }>
+    return <Cell key={ idx } cellClassName={ cellClassName } handleClickCell={ () => isValidClick(idx) }>
       { children }
     </Cell>
   })
