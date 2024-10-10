@@ -47,11 +47,19 @@ button {
   height: 100%;
 }
 
-.game-end {
+.lose,
+.win {
   width: 70%;
   height: 100vh;
-  background: gray;
   margin: 0 auto 0;
+}
+
+.lose {
+  background: gray;
+}
+
+.win {
+  background: greenyellow;
 }
 
 .game-end-text {
@@ -70,7 +78,8 @@ button {
   margin: auto 0 10px;
 }
 
-.game-init, .board {
+.game-init,
+.board {
   height: var(--BODY_HEIGHT);
   max-height: 100vw;
   align-items: center;
@@ -118,7 +127,8 @@ button {
   width: 100%;
 }
 
-.board-top, .board-buttom {
+.board-top,
+.board-buttom {
   flex-direction: row;
   justify-content: center;
 }

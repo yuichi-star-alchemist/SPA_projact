@@ -264,9 +264,10 @@ function Game() {
   }
 
 
-  const gameEndView = gameState == LOSE ? (
-    <ContainerDiv addClass="game-end">
-      <GameEndView />
+  const gameEndClass = gameState == LOSE ? "lose" : "win"
+  const gameEndView = gameState > IN_GAME ? (
+    <ContainerDiv addClass={ gameEndClass }>
+      <GameEndView isWin={ gameState } clearTime={ currentTime } />
     </ContainerDiv>
   ) : null
 
@@ -301,12 +302,17 @@ function RestartButton() {
   return <OnClickButton className="restart" onClick={ () => {} }>もう一度！</OnClickButton>
 }
 
-function GameEndView() {
+function GameEndView({ isWin, clearTime }) {
+  const gameEndText = isWin == WIN ? "game clear!" : "game orer.."
+  const clearTimeText = isWin == WIN ? `今回は ${ Math.floor(clearTime / 1000) } 秒でした！` : null
   return (
     <>
       <p className="game-end-text">
-        game over!
-        </p>
+        { gameEndText }
+      </p>
+      <p className="game-end-info">
+        { clearTimeText }
+      </p>
       <p className="game-end-info">
         結果の確認と再チャレンジは
         </p>
