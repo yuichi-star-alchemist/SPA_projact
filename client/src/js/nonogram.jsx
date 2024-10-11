@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { ContainerDiv, LinkButton, OnClickButton, HeartMark } from "./components"
 import DragMoveAction from "./components/DragMoveAction"
@@ -389,6 +389,20 @@ function LifeView({ currentLifePoint }) {
 
 function MarkView({ choice, handleChangeChoice }) {
   const choicedView = choice == TRUE ? "〇" : "✕"
+  useEffect(() => {
+    const handleKeyUp = e => {
+      if (e.key == " ") {
+        e.preventDefault()
+        handleChangeChoice()
+      }
+    }
+    document.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      document.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [handleChangeChoice])
+
   return (
     <ContainerDiv addClass="choice">
       <p>
